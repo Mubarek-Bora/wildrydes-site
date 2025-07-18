@@ -1,99 +1,48 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Request a Ride</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f2f2f2;
-      color: #333;
-      text-align: center;
-      padding: 2rem;
-    }
+  <meta charset="utf-8" />
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <title>Wild Rydes</title>
 
-    h1 {
-      font-size: 2.5rem;
-      color: #007bff;
-    }
-
-    #car {
-      width: 300px;
-      margin: 20px auto;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.3);
-    }
-
-    #requestButton {
-      background-color: #007bff;
-      color: white;
-      font-size: 1.2rem;
-      border: none;
-      padding: 12px 25px;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-      margin-top: 20px;
-    }
-
-    #requestButton:hover {
-      background-color: #0056b3;
-    }
-
-    #map {
-      height: 400px;
-      width: 100%;
-      margin-top: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.2);
-    }
-  </style>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://js.arcgis.com/4.6/esri/css/main.css">
+  <link rel="stylesheet" href="/css/ride.css">
+  <link rel="stylesheet" href="/css/message.css">
 </head>
 <body>
-  <h1>Welcome to RideMatch 🚗</h1>
-  <img id="car" src="https://images.unsplash.com/photo-1604427761891-b8f1c2003ef2?auto=format&fit=crop&w=800&q=80" alt="Ride Car" />
-  <br />
-  <button id="requestButton">Request a Ride</button>
+  <div class="info panel panel-default">
+    <div class="panel-heading">
+      <button id="request" class="btn btn-primary">Request a Ride</button>
+      <div class="dropdown pull-right">
+        <button id="accountLink" class="btn" type="button" data-toggle="dropdown">
+          Account <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu">
+          <li><a id="signOut" href="#">Sign out</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="panel-body">
+      <ol id="updates">
+        <li>Welcome! Click the map to set your pickup location.</li>
+      </ol>
+    </div>
+  </div>
 
-  <div id="map"></div>
+  <div id="main">
+    <div id="map"></div>
+  </div>
 
-  <script>
-    document.getElementById("requestButton").addEventListener("click", async () => {
-      try {
-        const response = await fetch("https://w1r79ziu4d.execute-api.us-west-2.amazonaws.com/dev/ride", {
-          method: "POST"
-        });
-
-        if (!response.ok) throw new Error("Network response was not ok");
-
-        const result = await response.json();
-        alert(`🚗 Your ${result.Color} ${result.Name} (${result.Type}) is on the way!`);
-      } catch (err) {
-        alert("Failed to request ride. Please try again.");
-        console.error("Ride request error:", err);
-      }
-    });
-  </script>
-
-  <script>
-    function initMap() {
-      const pickup = { lat: 47.6062, lng: -122.3321 }; // Seattle
-      const map = new google.maps.Map(document.getElementById("map"), {
-        zoom: 12,
-        center: pickup
-      });
-
-      new google.maps.Marker({
-        position: pickup,
-        map: map,
-        title: "Pickup Location"
-      });
-    }
-  </script>
-
-  <script async
-    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA2AhcYFcEdzePyJ3vW8NX1Yl6CN7Zhe6s&callback=initMap">
-  </script>
+  <!-- Scripts -->
+  <script src="js/vendor/jquery-3.1.0.js"></script>
+  <script src="js/vendor/bootstrap.min.js"></script>
+  <script src="js/vendor/aws-cognito-sdk.min.js"></script>
+  <script src="js/vendor/amazon-cognito-identity.min.js"></script>
+  <script src="https://js.arcgis.com/4.6/"></script>
+  <script src="js/config.js"></script>
+  <script src="js/cognito-auth.js"></script>
+  <script src="js/esri-map.js"></script>
+  <script src="js/ride.js"></script>
 </body>
 </html>
