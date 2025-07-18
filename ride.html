@@ -58,7 +58,6 @@
 
   <div id="map"></div>
 
-  <!-- Ride request script -->
   <script>
     document.getElementById("requestButton").addEventListener("click", async () => {
       try {
@@ -77,10 +76,9 @@
     });
   </script>
 
-  <!-- Google Maps init script -->
   <script>
     function initMap() {
-      const pickup = { lat: 47.6062, lng: -122.3321 }; // Seattle coords
+      const pickup = { lat: 47.6062, lng: -122.3321 }; // Seattle
       const map = new google.maps.Map(document.getElementById("map"), {
         zoom: 12,
         center: pickup
@@ -94,7 +92,6 @@
     }
   </script>
 
-  <!-- Google Maps API -->
   <script async
     src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA2AhcYFcEdzePyJ3vW8NX1Yl6CN7Zhe6s&callback=initMap">
   </script>
