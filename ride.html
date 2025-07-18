@@ -59,7 +59,7 @@
         if (!response.ok) throw new Error("Network response was not ok");
 
         const result = await response.json();
-        alert("🚗 Your ride with " + result.Name + " is on the way!");
+        alert(`🚗 Your ${result.Color} ${result.Name} (${result.Type}) is on the way!`);
       } catch (err) {
         alert("Failed to request ride. Please try again.");
         console.error("Ride request error:", err);
