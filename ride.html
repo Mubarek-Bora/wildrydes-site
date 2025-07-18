@@ -7,16 +7,15 @@
   <style>
     body {
       font-family: Arial, sans-serif;
-      background: #f2f2f2 url('https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
-      background-size: cover;
-      color: #fff;
+      background: #f2f2f2;
+      color: #333;
       text-align: center;
       padding: 2rem;
     }
 
     h1 {
       font-size: 2.5rem;
-      text-shadow: 1px 1px 4px #000;
+      color: #007bff;
     }
 
     #car {
@@ -41,6 +40,14 @@
     #requestButton:hover {
       background-color: #0056b3;
     }
+
+    #map {
+      height: 400px;
+      width: 100%;
+      margin-top: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.2);
+    }
   </style>
 </head>
 <body>
@@ -49,6 +56,9 @@
   <br />
   <button id="requestButton">Request a Ride</button>
 
+  <div id="map"></div>
+
+  <!-- Ride request script -->
   <script>
     document.getElementById("requestButton").addEventListener("click", async () => {
       try {
@@ -65,6 +75,28 @@
         console.error("Ride request error:", err);
       }
     });
+  </script>
+
+  <!-- Google Maps init script -->
+  <script>
+    function initMap() {
+      const pickup = { lat: 47.6062, lng: -122.3321 }; // Seattle coords
+      const map = new google.maps.Map(document.getElementById("map"), {
+        zoom: 12,
+        center: pickup
+      });
+
+      new google.maps.Marker({
+        position: pickup,
+        map: map,
+        title: "Pickup Location"
+      });
+    }
+  </script>
+
+  <!-- Google Maps script with your API key -->
+  <script async
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyA2AhcYFcEdzePyJ3vW8NX1Yl6CN7Zhe6s&callback=initMap">
   </script>
 </body>
 </html>
