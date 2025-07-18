@@ -4,20 +4,18 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Request a Ride</title>
-  <link rel="stylesheet" href="style.css"/>
   <style>
     body {
       font-family: Arial, sans-serif;
       background: #f2f2f2 url('https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?auto=format&fit=crop&w=1950&q=80') no-repeat center center fixed;
       background-size: cover;
-      color: #333;
+      color: #fff;
       text-align: center;
       padding: 2rem;
     }
 
     h1 {
       font-size: 2.5rem;
-      color: #fff;
       text-shadow: 1px 1px 4px #000;
     }
 
@@ -37,6 +35,7 @@
       border-radius: 8px;
       cursor: pointer;
       transition: background 0.3s ease;
+      margin-top: 20px;
     }
 
     #requestButton:hover {
@@ -45,7 +44,7 @@
   </style>
 </head>
 <body>
-  <h1>Welcome to RideMatch</h1>
+  <h1>Welcome to RideMatch 🚗</h1>
   <img id="car" src="https://images.unsplash.com/photo-1619871419821-37047c4b7131?auto=format&fit=crop&w=800&q=80" alt="Ride Car"/>
   <br />
   <button id="requestButton">Request a Ride</button>
@@ -53,14 +52,17 @@
   <script>
     document.getElementById("requestButton").addEventListener("click", async () => {
       try {
-        const response = await fetch("/ride", {
+        const response = await fetch("https://w1r79ziu4d.execute-api.us-west-2.amazonaws.com/dev/ride", {
           method: "POST"
         });
+
+        if (!response.ok) throw new Error("Network response was not ok");
+
         const result = await response.json();
-        alert("Your ride with " + result.Name + " is on the way! 🚗");
+        alert("🚗 Your ride with " + result.Name + " is on the way!");
       } catch (err) {
         alert("Failed to request ride. Please try again.");
-        console.error(err);
+        console.error("Ride request error:", err);
       }
     });
   </script>
