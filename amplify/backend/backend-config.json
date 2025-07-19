@@ -1,0 +1,70 @@
+{
+  "api": {
+    "rideapi123": {
+      "dependsOn": [
+        {
+          "attributes": [
+            "Name",
+            "Arn"
+          ],
+          "category": "function",
+          "resourceName": "wildrydessite74115767"
+        }
+      ],
+      "providerPlugin": "awscloudformation",
+      "service": "API Gateway"
+    }
+  },
+  "auth": {
+    "wildrydessite": {
+      "dependsOn": [],
+      "frontendAuthConfig": {
+        "mfaConfiguration": "OFF",
+        "mfaTypes": [
+          "SMS"
+        ],
+        "passwordProtectionSettings": {
+          "passwordPolicyCharacters": [],
+          "passwordPolicyMinLength": 8
+        },
+        "signupAttributes": [
+          "EMAIL"
+        ],
+        "socialProviders": [],
+        "usernameAttributes": [],
+        "verificationMechanisms": [
+          "EMAIL"
+        ]
+      },
+      "providerPlugin": "awscloudformation",
+      "service": "Cognito",
+      "serviceType": "managed"
+    }
+  },
+  "function": {
+    "wildrydessite74115767": {
+      "build": true,
+      "dependsOn": [],
+      "providerPlugin": "awscloudformation",
+      "service": "Lambda"
+    }
+  },
+  "parameters": {
+    "AMPLIFY_function_wildrydessite74115767_deploymentBucketName": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "wildrydessite74115767"
+        }
+      ]
+    },
+    "AMPLIFY_function_wildrydessite74115767_s3Key": {
+      "usedBy": [
+        {
+          "category": "function",
+          "resourceName": "wildrydessite74115767"
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "paths": {
+    "/ride": {
+      "name": "/ride",
+      "lambdaFunction": "wildrydessite74115767",
+      "permissions": {
+        "setting": "private",
+        "auth": [
+          "create"
+        ]
+      }
+    }
+  }
+}
