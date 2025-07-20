@@ -1,115 +1,58 @@
 <!DOCTYPE html>
-<html lang="en">
+<html class="no-js">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Register - Wild Rydes</title>
-    <link href="https://fonts.googleapis.com/css2?family=Quicksand:wght@500&display=swap" rel="stylesheet">
-    <style>
-        body {
-            margin: 0;
-            font-family: 'Quicksand', sans-serif;
-            background: linear-gradient(135deg, #8e44ad, #3498db);
-            color: #fff;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-        }
-
-        header img {
-            width: 150px;
-            margin-bottom: 20px;
-        }
-
-        .form-wrap {
-            background: rgba(0, 0, 0, 0.3);
-            padding: 30px;
-            border-radius: 16px;
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
-            width: 320px;
-        }
-
-        h1 {
-            text-align: center;
-            margin-bottom: 20px;
-            color: #ffffff;
-            text-shadow: 1px 1px 3px #000;
-        }
-
-        input[type="email"],
-        input[type="password"] {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            border: none;
-            border-radius: 8px;
-            background: #fff;
-            color: #333;
-            font-size: 16px;
-        }
-
-        input[type="submit"] {
-            width: 100%;
-            padding: 12px;
-            background: linear-gradient(90deg, #6c5ce7, #00cec9);
-            color: white;
-            font-weight: bold;
-            font-size: 16px;
-            border: none;
-            border-radius: 8px;
-            margin-top: 10px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-        }
-
-        input[type="submit"]:hover {
-            background: linear-gradient(90deg, #00cec9, #6c5ce7);
-            transform: scale(1.03);
-        }
-
-        footer {
-            margin-top: 20px;
-            font-size: 14px;
-            color: #eee;
-        }
-
-        .sparkles {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-            background-image: radial-gradient(circle, #ffffff33 1px, transparent 1px);
-            background-size: 40px 40px;
-            animation: twinkle 4s linear infinite;
-            z-index: 0;
-        }
-
-        @keyframes twinkle {
-            from {
-                background-position: 0 0;
-            }
-
-            to {
-                background-position: 40px 40px;
-            }
-        }
-    </style>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+    <title>Register - WildRydes</title>
+    <meta name="viewport" content="width=device-width" />
+    <link rel="stylesheet" href="css/font.css" />
+    <link rel="stylesheet" href="css/normalize.css" />
+    <link rel="stylesheet" href="css/index.css" />
+    <link rel="stylesheet" href="css/message.css" />
 </head>
 
 <body>
-    <div class="sparkles"></div>
+    <div id="noCognitoMessage" class="configMessage" style="display: none;">
+        <div class="backdrop"></div>
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <h3 class="panel-title">No Cognito User Pool Configured</h3>
+            </div>
+            <div class="panel-body">
+                <p>
+                    There is no user pool configured in
+                    <a href="/js/config.js">/js/config.js</a>.
+                    You'll configure this in Module 2 of the workshop.
+                </p>
+            </div>
+        </div>
+    </div>
+
     <header>
-        <img src="images/logo.png" alt="Wild Rydes Logo">
+        <img src="images/logo.png" alt="WildRydes Logo" />
     </header>
 
     <section class="form-wrap">
         <h1>Register</h1>
         <form id="registrationForm">
-            <input type="email" id="emailInputRegister" placeholder="Email" required>
-            <input type="password" id="passwordInputRegister" place
+            <input type="email" id="emailInputRegister" placeholder="Email" required />
+            <input type="password" id="passwordInputRegister" placeholder="Password" required />
+            <input type="password" id="password2InputRegister" placeholder="Confirm Password" required />
+            <input type="submit" value="Let's Ryde" />
+        </form>
+
+        <p style="text-align:center; margin-top: 10px;">
+            Already registered? <a href="signin.html">Sign in here</a>
+        </p>
+    </section>
+
+    <script src="js/vendor/jquery-3.1.0.js"></script>
+    <script src="js/vendor/bootstrap.min.js"></script>
+    <script src="js/vendor/aws-cognito-sdk.min.js"></script>
+    <script src="js/vendor/amazon-cognito-identity.min.js"></script>
+    <script src="js/config.js"></script>
+    <script src="js/cognito-auth.js"></script>
+</body>
+
+</html>
