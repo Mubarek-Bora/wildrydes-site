@@ -1,20 +1,18 @@
-/*global WildRydes _config*/
+/* global WildRydes _config */
+import { Auth } from "https://cdn.jsdelivr.net/npm/aws-amplify/+esm";
 
 var WildRydes = window.WildRydes || {};
 WildRydes.map = WildRydes.map || {};
 
 (function rideScopeWrapper($) {
   var authToken;
-  WildRydes.authToken
-    .then(function setAuthToken(token) {
-      if (token) {
-        authToken = token;
-      } else {
-        window.location.href = "/signin.html";
-      }
+
+  Auth.currentSession()
+    .then((session) => {
+      authToken = session.getIdToken().getJwtToken();
     })
-    .catch(function handleTokenError(error) {
-      alert(error);
+    .catch((error) => {
+      alert("Not signed in. Redirecting to signin.");
       window.location.href = "/signin.html";
     });
 
@@ -50,35 +48,21 @@ WildRydes.map = WildRydes.map || {};
   }
 
   function completeRequest(result) {
-    var driver;
-    var pronoun;
-    console.log("Response received from API: ", result);
-    driver = result.Driver;
-    pronoun = driver.Gender === "Male" ? "his" : "her";
+    var driver = result.Driver;
+    var pronoun = driver.Gender === "Male" ? "his" : "her";
     displayUpdate(
       driver.Name + ", your " + driver.Vehicle + ", is on " + pronoun + " way."
     );
-    animateArrival(function animateCallback() {
+    animateArrival(function () {
       displayUpdate(driver.Name + " has arrived. Buckle up!");
       WildRydes.map.unsetLocation();
-      $("#request").prop("disabled", "disabled");
-      $("#request").text("Set Pickup");
+      $("#request").prop("disabled", "disabled").text("Set Pickup");
     });
   }
 
-  // Register click handler for #request button
   $(function onDocReady() {
     $("#request").click(handleRequestClick);
     $(WildRydes.map).on("pickupChange", handlePickupChanged);
-
-    WildRydes.authToken.then(function updateAuthMessage(token) {
-      if (token) {
-        displayUpdate(
-          'You are authenticated. Click to see your <a href="#authTokenModal" data-toggle="modal">auth token</a>.'
-        );
-        $(".authToken").text(token);
-      }
-    });
 
     if (!_config.api.invokeUrl) {
       $("#noApiMessage").show();
@@ -86,14 +70,12 @@ WildRydes.map = WildRydes.map || {};
   });
 
   function handlePickupChanged() {
-    var requestButton = $("#request");
-    requestButton.text("Request Driver");
-    requestButton.prop("disabled", false);
+    $("#request").text("Request Driver").prop("disabled", false);
   }
 
   function handleRequestClick(event) {
-    var pickupLocation = WildRydes.map.selectedPoint;
     event.preventDefault();
+    var pickupLocation = WildRydes.map.selectedPoint;
     requestDriver(pickupLocation);
   }
 
@@ -101,17 +83,15 @@ WildRydes.map = WildRydes.map || {};
     var dest = WildRydes.map.selectedPoint;
     var origin = {};
 
-    if (dest.latitude > WildRydes.map.center.latitude) {
-      origin.latitude = WildRydes.map.extent.minLat;
-    } else {
-      origin.latitude = WildRydes.map.extent.maxLat;
-    }
+    origin.latitude =
+      dest.latitude > WildRydes.map.center.latitude
+        ? WildRydes.map.extent.minLat
+        : WildRydes.map.extent.maxLat;
 
-    if (dest.longitude > WildRydes.map.center.longitude) {
-      origin.longitude = WildRydes.map.extent.minLng;
-    } else {
-      origin.longitude = WildRydes.map.extent.maxLng;
-    }
+    origin.longitude =
+      dest.longitude > WildRydes.map.center.longitude
+        ? WildRydes.map.extent.minLng
+        : WildRydes.map.extent.maxLng;
 
     WildRydes.map.animate(origin, dest, callback);
   }
