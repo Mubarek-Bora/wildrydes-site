@@ -1,31 +1,80 @@
 <!DOCTYPE html>
-<html class="no-js">
+<html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sign In - Wild Rydes</title>
-    <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="css/font.css">
-    <link rel="stylesheet" href="css/normalize.css">
-    <link rel="stylesheet" href="css/index.css">
-    <link rel="stylesheet" href="/css/message.css">
+    <style>
+        body {
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: #fff;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        header img {
+            width: 150px;
+            margin-bottom: 20px;
+        }
+
+        .form-wrap {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+            width: 300px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #fff;
+        }
+
+        input[type="email"],
+        input[type="password"],
+        input[type="submit"] {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 6px;
+        }
+
+        input[type="email"],
+        input[type="password"] {
+            background: #fff;
+            color: #333;
+        }
+
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+
+        footer {
+            position: absolute;
+            bottom: 10px;
+            color: #ccc;
+            font-size: 14px;
+        }
+    </style>
 </head>
 
 <body>
-
-    <div id="noCognitoMessage" class="configMessage" style="display: none;">
-        <div class="backdrop"></div>
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <h3 class="panel-title">No Cognito User Pool Configured</h3>
-            </div>
-            <div class="panel-body">
-                <p>Check your <code>/js/config.js</code> and ensure it's properly set up.</p>
-            </div>
-        </div>
-    </div>
-
     <header>
         <img src="images/logo.png" alt="Wild Rydes Logo">
     </header>
@@ -37,14 +86,11 @@
             <input type="password" id="passwordInputSignin" placeholder="Password" required>
             <input type="submit" value="Sign In">
         </form>
-
-        <p class="form-note">
-            New here? <a href="register.html">Register</a>
-        </p>
     </section>
 
+    <footer>Powered by AWS Amplify 🚀</footer>
+
     <script src="js/vendor/jquery-3.1.0.js"></script>
-    <script src="js/vendor/bootstrap.min.js"></script>
     <script src="js/vendor/aws-cognito-sdk.min.js"></script>
     <script src="js/vendor/amazon-cognito-identity.min.js"></script>
     <script src="js/config.js"></script>
