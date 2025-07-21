@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Sign In - Wild Rydes</title>
-    <link rel="stylesheet" href="css/font.css">
+    <link rel="stylesheet" href="css/font.css" />
     <style>
         body {
             margin: 0;
@@ -17,6 +17,7 @@
             align-items: center;
             justify-content: center;
             height: 100vh;
+            position: relative;
         }
 
         header img {
@@ -30,11 +31,25 @@
             border-radius: 12px;
             box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
             width: 300px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         h1 {
             text-align: center;
             color: #fff;
+            margin-bottom: 20px;
+        }
+
+        .input-group {
+            margin: 15px 0;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #fff;
+            font-weight: 500;
         }
 
         input[type="email"],
@@ -42,15 +57,28 @@
         input[type="submit"] {
             width: 100%;
             padding: 12px;
-            margin: 10px 0;
             border: none;
             border-radius: 6px;
+            box-sizing: border-box;
         }
 
         input[type="email"],
         input[type="password"] {
             background: #fff;
             color: #333;
+            border: 2px solid transparent;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        input[type="email"]:focus,
+        input[type="password"]:focus {
+            outline: none;
+            border-color: #4CAF50;
+            box-shadow: 0 0 0 3px rgba(76, 175, 80, 0.2);
+        }
+
+        input[type="email"]:invalid {
+            border-color: #f44336;
         }
 
         input[type="submit"] {
@@ -58,11 +86,117 @@
             color: white;
             cursor: pointer;
             font-weight: bold;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s ease;
+            margin-top: 10px;
         }
 
         input[type="submit"]:hover {
             background-color: #45a049;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        input[type="submit"]:active {
+            transform: translateY(0);
+        }
+
+        input[type="submit"]:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Modal Styles */
+        .modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9998;
+            backdrop-filter: blur(3px);
+        }
+
+        #modal {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            color: #000;
+            padding: 30px;
+            border-radius: 12px;
+            z-index: 9999;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+            animation: modalSlideIn 0.3s ease-out;
+        }
+
+        @keyframes modalSlideIn {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -60%);
+            }
+
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .modal-title {
+            margin: 0;
+            color: #333;
+            font-size: 18px;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: background-color 0.3s ease;
+        }
+
+        .close-btn:hover {
+            background-color: #f5f5f5;
+        }
+
+        .error-message {
+            color: #f44336;
+            background: #ffebee;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #f44336;
+        }
+
+        .success-message {
+            color: #4CAF50;
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 4px solid #4CAF50;
         }
 
         footer {
@@ -71,30 +205,254 @@
             color: #ccc;
             font-size: 14px;
         }
+
+        /* Loading state */
+        .loading {
+            position: relative;
+            overflow: hidden;
+        }
+
+        .loading::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            animation: loading 1.5s infinite;
+        }
+
+        @keyframes loading {
+            0% {
+                left: -100%;
+            }
+
+            100% {
+                left: 100%;
+            }
+        }
+
+        /* Skip link for accessibility */
+        .skip-link {
+            position: absolute;
+            top: -40px;
+            left: 6px;
+            background: #000;
+            color: #fff;
+            padding: 8px;
+            text-decoration: none;
+            border-radius: 4px;
+            z-index: 10000;
+        }
+
+        .skip-link:focus {
+            top: 6px;
+        }
+
+        /* Focus indicators */
+        button:focus-visible,
+        .close-btn:focus-visible {
+            outline: 2px solid #4CAF50;
+            outline-offset: 2px;
+        }
     </style>
 </head>
 
 <body>
+    <!-- Skip link for accessibility -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
     <header>
-        <img src="images/logo.png" alt="Wild Rydes Logo">
+        <img src="images/logo.png" alt="Wild Rydes Logo" />
     </header>
 
-    <section class="form-wrap">
-        <h1>Sign In</h1>
-        <form id="signinForm">
-            <input type="email" id="emailInputSignin" placeholder="Email" required>
-            <input type="password" id="passwordInputSignin" placeholder="Password" required>
-            <input type="submit" value="Sign In">
-        </form>
-    </section>
+    <main id="main-content">
+        <section class="form-wrap">
+            <h1>Sign In</h1>
+            <form id="signinForm" role="form" aria-label="Sign in form">
+                <div class="input-group">
+                    <label for="emailInputSignin">Email Address</label>
+                    <input type="email" id="emailInputSignin" name="email" placeholder="Enter your email" required
+                        aria-describedby="email-error" autocomplete="email" />
+                    <div id="email-error" class="error-text" role="alert" aria-live="polite"></div>
+                </div>
 
-    <footer>Powered by AWS Amplify 🚀</footer>
+                <div class="input-group">
+                    <label for="passwordInputSignin">Password</label>
+                    <input type="password" id="passwordInputSignin" name="password" placeholder="Enter your password"
+                        required aria-describedby="password-error" autocomplete="current-password" />
+                    <div id="password-error" class="error-text" role="alert" aria-live="polite"></div>
+                </div>
 
+                <input type="submit" value="Sign In" aria-describedby="form-status" />
+                <div id="form-status" role="status" aria-live="polite"></div>
+            </form>
+        </section>
+    </main>
+
+    <!-- Modal backdrop -->
+    <div class="modal-backdrop" id="modalBackdrop" aria-hidden="true"></div>
+
+    <!-- Enhanced modal -->
+    <div id="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title" aria-hidden="true">
+        <div class="modal-header">
+            <h2 id="modal-title" class="modal-title">Notification</h2>
+            <button class="close-btn" aria-label="Close modal" onclick="hideModal()">×</button>
+        </div>
+        <div id="modal-content">
+            <p>This is a modal popup</p>
+        </div>
+    </div>
+
+    <footer>
+        <p>Powered by AWS Amplify 🚀</p>
+    </footer>
+
+    <!-- Scripts -->
     <script src="js/vendor/jquery-3.1.0.js"></script>
     <script src="js/vendor/aws-cognito-sdk.min.js"></script>
     <script src="js/vendor/amazon-cognito-identity.min.js"></script>
     <script src="js/config.js"></script>
     <script src="js/cognito-auth.js"></script>
+
+    <script>
+        // Enhanced modal functionality with better accessibility
+        const modal = document.getElementById('modal');
+        const modalBackdrop = document.getElementById('modalBackdrop');
+        const submitButton = document.querySelector('input[type="submit"]');
+        let previouslyFocusedElement = null;
+
+        function showModal(message, type = 'info') {
+            // Store the currently focused element
+            previouslyFocusedElement = document.activeElement;
+
+            // Update modal content
+            const modalContent = document.getElementById('modal-content');
+            const messageClass = type === 'error' ? 'error-message' :
+                type === 'success' ? 'success-message' : '';
+
+            modalContent.innerHTML = `<div class="${messageClass}"><p>${message}</p></div>`;
+
+            // Show modal and backdrop
+            modalBackdrop.style.display = 'block';
+            modal.style.display = 'block';
+            modal.setAttribute('aria-hidden', 'false');
+            modalBackdrop.setAttribute('aria-hidden', 'false');
+
+            // Focus the close button
+            setTimeout(() => {
+                const closeButton = modal.querySelector('.close-btn');
+                closeButton.focus();
+            }, 100);
+
+            // Trap focus within modal
+            trapFocus(modal);
+        }
+
+        function hideModal() {
+            modal.style.display = 'none';
+            modalBackdrop.style.display = 'none';
+            modal.setAttribute('aria-hidden', 'true');
+            modalBackdrop.setAttribute('aria-hidden', 'true');
+
+            // Return focus to previously focused element
+            if (previouslyFocusedElement) {
+                previouslyFocusedElement.focus();
+                previouslyFocusedElement = null;
+            }
+        }
+
+        // Close modal when clicking backdrop
+        modalBackdrop.addEventListener('click', hideModal);
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape' && modal.style.display === 'block') {
+                hideModal();
+            }
+        });
+
+        // Focus trap for modal accessibility
+        function trapFocus(element) {
+            const focusableElements = element.querySelectorAll(
+                'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            );
+            const firstFocusable = focusableElements[0];
+            const lastFocusable = focusableElements[focusableElements.length - 1];
+
+            element.addEventListener('keydown', function (e) {
+                if (e.key === 'Tab') {
+                    if (e.shiftKey) {
+                        if (document.activeElement === firstFocusable) {
+                            lastFocusable.focus();
+                            e.preventDefault();
+                        }
+                    } else {
+                        if (document.activeElement === lastFocusable) {
+                            firstFocusable.focus();
+                            e.preventDefault();
+                        }
+                    }
+                }
+            });
+        }
+
+        // Enhanced form handling
+        document.getElementById('signinForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            // Show loading state
+            submitButton.classList.add('loading');
+            submitButton.disabled = true;
+            submitButton.value = 'Signing In...';
+
+            // Simulate authentication (replace with actual auth logic)
+            setTimeout(() => {
+                // Reset button state
+                submitButton.classList.remove('loading');
+                submitButton.disabled = false;
+                submitButton.value = 'Sign In';
+
+                // Show result (this would be based on actual auth response)
+                const success = Math.random() > 0.5; // Random for demo
+
+                if (success) {
+                    showModal('Sign in successful! Redirecting...', 'success');
+                    setTimeout(() => {
+                        // Redirect to app
+                        window.location.href = '/app';
+                    }, 2000);
+                } else {
+                    showModal('Invalid email or password. Please try again.', 'error');
+                }
+            }, 2000);
+        });
+
+        // Real-time validation feedback
+        const emailInput = document.getElementById('emailInputSignin');
+        const passwordInput = document.getElementById('passwordInputSignin');
+
+        emailInput.addEventListener('blur', function () {
+            const errorDiv = document.getElementById('email-error');
+            if (this.value && !this.checkValidity()) {
+                errorDiv.textContent = 'Please enter a valid email address.';
+                errorDiv.style.color = '#f44336';
+            } else {
+                errorDiv.textContent = '';
+            }
+        });
+
+        passwordInput.addEventListener('blur', function () {
+            const errorDiv = document.getElementById('password-error');
+            if (this.value.length < 6 && this.value.length > 0) {
+                errorDiv.textContent = 'Password must be at least 6 characters long.';
+                errorDiv.style.color = '#f44336';
+            } else {
+                errorDiv.textContent = '';
+            }
+        });
+    </script>
 </body>
 
 </html>
