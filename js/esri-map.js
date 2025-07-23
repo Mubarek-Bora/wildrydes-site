@@ -1,122 +1,90 @@
-/*global WildRydes _config*/
-
-var WildRydes = window.WildRydes || {};
+// gm-map.js
+window.WildRydes = window.WildRydes || {};
 WildRydes.map = WildRydes.map || {};
 
-(function esriMapScopeWrapper($) {
-    require([
-        'esri/Map',
-        'esri/views/MapView',
-        'esri/Graphic',
-        'esri/geometry/Point',
-        'esri/symbols/TextSymbol',
-        'esri/symbols/PictureMarkerSymbol',
-        'esri/geometry/support/webMercatorUtils',
-        'dojo/domReady!'
-    ], function requireCallback(
-        Map, MapView,
-        Graphic, Point, TextSymbol,
-        PictureMarkerSymbol, webMercatorUtils
-    ) {
-        var wrMap = WildRydes.map;
+(function () {
+  const wrMap = WildRydes.map;
+  let map;
+  let pinMarker;
+  let movingMarker;
 
-        var map = new Map({ basemap: 'gray-vector' });
+  wrMap.center = {};
+  wrMap.extent = {};
+  wrMap.selectedPoint = null;
 
-        var view = new MapView({
-            center: [-122.31, 47.60],
-            container: 'map',
-            map: map,
-            zoom: 12
-        });
-
-        var pinSymbol = new TextSymbol({
-            color: '#f50856',
-            text: '\ue61d',
-            font: {
-                size: 20,
-                family: 'CalciteWebCoreIcons'
-            }
-        });
-
-        var unicornSymbol = new PictureMarkerSymbol({
-            url: '/images/unicorn-icon.png',
-            width: '25px',
-            height: '25px'
-        });
-
-        var pinGraphic;
-        var unicornGraphic;
-
-        function updateCenter(newValue) {
-            wrMap.center = {
-                latitude: newValue.latitude,
-                longitude: newValue.longitude
-            };
-        }
-
-        function updateExtent(newValue) {
-            var min = webMercatorUtils.xyToLngLat(newValue.xmin, newValue.ymin);
-            var max = webMercatorUtils.xyToLngLat(newValue.xmax, newValue.ymax);
-            wrMap.extent = {
-                minLng: min[0],
-                minLat: min[1],
-                maxLng: max[0],
-                maxLat: max[1]
-            };
-        }
-
-        view.watch('extent', updateExtent);
-        view.watch('center', updateCenter);
-        view.then(function onViewLoad() {
-            updateExtent(view.extent);
-            updateCenter(view.center);
-        });
-
-        view.on('click', function handleViewClick(event) {
-            wrMap.selectedPoint = event.mapPoint;
-            view.graphics.remove(pinGraphic);
-            pinGraphic = new Graphic({
-                symbol: pinSymbol,
-                geometry: wrMap.selectedPoint
-            });
-            view.graphics.add(pinGraphic);
-            $(wrMap).trigger('pickupChange');
-        });
-
-        wrMap.animate = function animate(origin, dest, callback) {
-            var startTime;
-            var step = function animateFrame(timestamp) {
-                var progress;
-                var progressPct;
-                var point;
-                var deltaLat;
-                var deltaLon;
-                if (!startTime) startTime = timestamp;
-                progress = timestamp - startTime;
-                progressPct = Math.min(progress / 2000, 1);
-                deltaLat = (dest.latitude - origin.latitude) * progressPct;
-                deltaLon = (dest.longitude - origin.longitude) * progressPct;
-                point = new Point({
-                    longitude: origin.longitude + deltaLon,
-                    latitude: origin.latitude + deltaLat
-                });
-                view.graphics.remove(unicornGraphic);
-                unicornGraphic = new Graphic({
-                    geometry: point,
-                    symbol: unicornSymbol
-                });
-                view.graphics.add(unicornGraphic);
-                if (progressPct < 1) {
-                    requestAnimationFrame(step);
-                } else {
-                    callback();
-                }
-            };
-            requestAnimationFrame(step);
-        };
-
-        wrMap.unsetLocation = function unsetLocation() {
-            view.graphics.remove(pinGraphic);
-        };
+  // Call this after google script loads
+  wrMap.init = function initGM(containerId = "map") {
+    const defaultCenter = { lat: 47.6, lng: -122.31 }; // Seattle
+    map = new google.maps.Map(document.getElementById(containerId), {
+      zoom: 12,
+      center: defaultCenter,
+      mapTypeId: google.maps.MapTypeId.ROADMAP,
     });
-}(jQuery));
+
+    // Track center/extent (approx)
+    map.addListener("idle", () => {
+      const c = map.getCenter();
+      wrMap.center = { latitude: c.lat(), longitude: c.lng() };
+
+      const b = map.getBounds();
+      if (b) {
+        const ne = b.getNorthEast();
+        const sw = b.getSouthWest();
+        wrMap.extent = {
+          minLng: sw.lng(),
+          minLat: sw.lat(),
+          maxLng: ne.lng(),
+          maxLat: ne.lat(),
+        };
+      }
+    });
+
+    // Click to set pickup pin
+    map.addListener("click", (e) => {
+      wrMap.selectedPoint = e.latLng;
+      if (pinMarker) pinMarker.setMap(null);
+      pinMarker = new google.maps.Marker({
+        position: e.latLng,
+        map,
+        icon: "https://maps.google.com/mapfiles/ms/icons/pink-dot.png",
+        title: "Pickup",
+      });
+      // Trigger the same jQuery event the old code did
+      if (window.jQuery) jQuery(wrMap).trigger("pickupChange");
+    });
+  };
+
+  wrMap.unsetLocation = function () {
+    if (pinMarker) pinMarker.setMap(null);
+    pinMarker = null;
+  };
+
+  wrMap.animate = function (origin, dest, callback) {
+    // origin/dest like { latitude, longitude }
+    const start = new google.maps.LatLng(origin.latitude, origin.longitude);
+    const end = new google.maps.LatLng(dest.latitude, dest.longitude);
+
+    if (movingMarker) movingMarker.setMap(null);
+    movingMarker = new google.maps.Marker({
+      position: start,
+      map,
+      icon: "/images/unicorn-icon.png", // or car icon
+    });
+
+    const duration = 2000;
+    const startTime = performance.now();
+
+    function step(now) {
+      const pct = Math.min((now - startTime) / duration, 1);
+      const lat = start.lat() + (end.lat() - start.lat()) * pct;
+      const lng = start.lng() + (end.lng() - start.lng()) * pct;
+      movingMarker.setPosition(new google.maps.LatLng(lat, lng));
+      if (pct < 1) {
+        requestAnimationFrame(step);
+      } else {
+        if (callback) callback();
+      }
+    }
+    requestAnimationFrame(step);
+  };
+})();
