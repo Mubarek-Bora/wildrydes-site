@@ -1,138 +1,341 @@
 
-<!doctype html>
-<html class="no-js" lang="">
+<!DOCTYPE html>
+<html lang="en">
+
 <head>
-  <meta charset="utf-8">
-  <meta name="description" content="">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Wild Rydes</title>
 
-  <link rel="stylesheet" href="css/font.css">
-  <link rel="stylesheet" href="css/main.css">
+  <!-- Replace with your own font if you want -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
-  <script src="js/vendor/modernizr.js"></script>
+  <link rel="stylesheet" href="css/font.css" />
+  <style>
+    :root {
+      --bg: #0f172a;
+      --fg: #f1f5f9;
+      --accent: #a855f7;
+      --accent-2: #38bdf8;
+      --muted: #94a3b8;
+      --radius: 12px;
+      --container: 1200px;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      line-height: 1.6;
+    }
+
+    a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(12px);
+      background: rgba(15, 23, 42, .7);
+      border-bottom: 1px solid rgba(255, 255, 255, .05);
+    }
+
+    .wrap {
+      max-width: var(--container);
+      margin: auto;
+      padding: 0 1rem;
+    }
+
+    .site-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      min-height: 64px;
+    }
+
+    .site-nav ul {
+      display: flex;
+      gap: 1rem;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .btn-menu {
+      display: none;
+    }
+
+    h1,
+    h2,
+    h3 {
+      margin: 0 0 .5em;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .hero {
+      padding: 6rem 0 4rem;
+      text-align: center;
+      background: linear-gradient(145deg, var(--accent) 0%, var(--accent-2) 100%);
+      color: #fff;
+    }
+
+    .hero h1 {
+      font-size: clamp(2.5rem, 6vw, 4rem);
+    }
+
+    .hero p {
+      max-width: 680px;
+      margin: 1rem auto 2rem;
+      color: #f8fafc;
+    }
+
+    .btn {
+      display: inline-block;
+      padding: .9rem 1.6rem;
+      border-radius: var(--radius);
+      font-weight: 600;
+      background: #fff;
+      color: #000;
+      transition: .15s transform;
+    }
+
+    .btn:hover {
+      transform: translateY(-2px);
+    }
+
+    section {
+      padding: 4rem 0;
+    }
+
+    .grid {
+      display: grid;
+      gap: 2rem;
+    }
+
+    .grid-4 {
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    }
+
+    .card {
+      background: rgba(255, 255, 255, .05);
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      border: 1px solid rgba(255, 255, 255, .06);
+    }
+
+    .story p {
+      color: var(--muted);
+    }
+
+    form.newsletter {
+      display: flex;
+      flex-wrap: wrap;
+      gap: .75rem;
+      justify-content: center;
+      margin: 2rem 0 1rem;
+    }
+
+    form.newsletter input {
+      flex: 1 1 240px;
+      padding: .9rem 1rem;
+      border-radius: var(--radius);
+      border: none;
+      outline: none;
+      background: #fff;
+      color: #000;
+    }
+
+    form.newsletter button {
+      padding: .9rem 1.4rem;
+      border-radius: var(--radius);
+      border: none;
+      background: var(--accent);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    footer {
+      padding: 3rem 0;
+      border-top: 1px solid rgba(255, 255, 255, .08);
+      background: #0b1120;
+      color: var(--muted);
+      font-size: .9rem;
+    }
+
+    footer nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .social a {
+      margin-right: .75rem;
+    }
+
+    @media (max-width:768px) {
+      .site-nav {
+        display: none;
+      }
+
+      .btn-menu {
+        display: block;
+        background: none;
+        border: 1px solid rgba(255, 255, 255, .2);
+        color: #fff;
+        padding: .4rem .8rem;
+        border-radius: 6px;
+      }
+    }
+  </style>
 </head>
-<body class="page-home">
 
-  <header class="site-header">
-    <h1 class="title">Wild Rydes</h1>
-    <nav class="site-nav">
-      <ul>
-        <li><a href="index.html">Home</a></li>
-        <li><a href="unicorns.html">Meet the Unicorns</a></li>
-        <li><a href="investors.html">Investors &amp; Board of Directors</a></li>
-        <li><a href="faq.html">FAQ</a></li>
-        <li><a href="apply.html">Apply</a></li>
-      </ul>
-    </nav>
-    <button type="button" class="btn-menu"><span>Menu</span></button>
-    <a class="home-button" href="/register.html">Let's Go!</a>
-  </header>
-  
+<body>
 
-  <section class="home-about">
-    <div class="row column large-9 xlarge-6 xxlarge-4">
-      <h2 class="section-title">How Does Things This Work?</h2>
-      <p class="content">
-        In today’s fast paced world, you’ve got places you need to be but not enough time in your jam packed schedule. Wouldn’t it be nice if there were a transportation service that changed the way you get around daily? Introducing Wild Rydes, an innovative transportation service that helps people get to their destination faster and hassle-free. Getting started is as easy as tapping a button in our app.
-      </p>
-    </div>
-
-    <div class="row medium-up-2 large-up-4">
-      <div class="column">
-        <div class="home-about-block">
-          <h3 class="title icon-download">Download The App</h3>
-          <p class="content">Head over to the app store and download the Wild Rydes app. You’re just a few taps away from getting your ryde.</p>
-        </div>
-      </div>
-
-      <div class="column">
-        <div class="home-about-block">
-          <h3 class="title icon-unicorn">Request A Unicorn</h3>
-          <p class="content">We can get you there. Simply request a ryde on the app and we'll connect you with a unicorn immediately.</p>
-        </div>
-      </div>
-
-      <div class="column">
-        <div class="home-about-block">
-          <h3 class="title icon-price">Pick A Price</h3>
-          <p class="content">Pick the valuation you're willing to pay and your ryde is set up. The only surge is the acceleration you get when taking off.</p>
-        </div>
-      </div>
-
-      <div class="column">
-        <div class="home-about-block">
-          <h3 class="title icon-success">Ride Off To Success!</h3>
-          <p class="content">After matching with your unicorn and agreeing to its terms, you’ll be all set. Your unicorn will arrive shortly to pick you up.</p>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="home-story">
-    <div class="row column large-9 xlarge-6 xxlarge-4">
-      <h2 class="section-title">Our Story</h2>
-      <p class="content">
-        Wild Rydes was started by a former hedge fund analyst and a software developer. The two long-time friends happened upon the Wild Rydes idea after attending a silent yoga retreat in Nevada. After gazing upon the majestic herds of unicorns prancing across a surreal Nevada sunset, they witnessed firsthand the poverty and unemployment endemic to that once proud race. Whether it was modern society’s reliance on science over magic or not, we’ll never know the cause of their Ozymandian downfall and fade to obscurity. Moved by empathy, romance, and free enterprise, they saw an opportunity to marry society’s demand for faster, more flexible transportation to underutilized beasts of labor through an on-demand market making transportation app. Using the founders’ respective expertise in animal husbandry and software engineering, Wild Rydes was formed and has since raised untold amounts of venture capital. Today, Wild Rydes has thousands of unicorns in its network fulfilling hundreds of rydes each day.
-      </p>
-    </div>
-  </section>
-
-  <section class="home-sign-up">
-    <div class="row column">
-      <img class="icon-w" src="images/wr-home-W.png">
-
-      <form onsubmit="javascript:void(0);">
-        <input type="email" placeholder="Enter your email address">
-        <button type="button">Submit</button>
-      </form>
-
-      <h2 class="section-title">Sign Up</h2>
-
-      <p class="content">Wild Rydes is coming soon! Enter your email to enter the limited private beta</p>
-
-      <div class="apps">
-        <a class="app-icon" href=""><img src="images/wr-home-apple.png"></a>
-        <a class="app-icon" href=""><img src="images/wr-home-google.png"></a>
-        <a class="app-icon" href=""><img src="images/wr-home-blackberry.png"></a>
-        <a class="app-icon" href=""><img src="images/wr-home-Xiaomi.png"></a>
-      </div>
-
-      <div class="social">
-        <a class="icon-fb" href="">Facebook</a>
-        <a class="icon-tw" href="">Twitter</a>
-        <a class="icon-ig" href="">Instagram</a>
-        <a class="icon-wc" href="">Wechat</a>
-        <a class="icon-wb" href="">Weibo</a>
-      </div>
-    </div>
-  </section>
-
-  >
-
-  <footer class="site-footer">
-    <div class="row column">
-      <nav class="footer-nav">
+  <header>
+    <div class="wrap site-header">
+      <h1 class="title">Wild Rydes</h1>
+      <nav class="site-nav" aria-label="Primary">
         <ul>
-          <li><a href="index.html">Home</a></li>
+          <li><a href="index.html" aria-current="page">Home</a></li>
           <li><a href="unicorns.html">Meet the Unicorns</a></li>
-          <li><a href="investors.html">Investors & Board of Directors</a></li>
+          <li><a href="investors.html">Investors</a></li>
           <li><a href="faq.html">FAQ</a></li>
           <li><a href="apply.html">Apply</a></li>
         </ul>
       </nav>
+      <button class="btn-menu" aria-label="Open Menu">Menu</button>
+      <a class="btn" href="/register.html">Let's Go!</a>
     </div>
+  </header>
 
-    <div class="row column">
-      <div class="footer-legal">
-        &copy;WildRydes Inc<br>
-        All Rights Reserved
+  <!-- HERO -->
+  <section class="hero">
+    <div class="wrap">
+      <h1>Get There on a Unicorn 🦄</h1>
+      <p>On‑demand magical transportation. Tap a button, meet a unicorn, arrive in style.</p>
+      <a class="btn" href="/register.html">Request a Ryde</a>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section>
+    <div class="wrap">
+      <h2 class="section-title" style="text-align:center;margin-bottom:2rem;">How It Works</h2>
+      <div class="grid grid-4">
+        <div class="card">
+          <h3>1. Download</h3>
+          <p>Grab the app. You're a few taps from your first ryde.</p>
+        </div>
+        <div class="card">
+          <h3>2. Request</h3>
+          <p>Ask for a unicorn. We'll match you instantly.</p>
+        </div>
+        <div class="card">
+          <h3>3. Pick a Price</h3>
+          <p>You choose the valuation you’re willing to pay. No surge, only lift‑off.</p>
+        </div>
+        <div class="card">
+          <h3>4. Ride Off</h3>
+          <p>Agree on terms, saddle up, and soar to your destination.</p>
+        </div>
       </div>
+    </div>
+  </section>
+
+  <!-- STORY -->
+  <section class="story" style="background:#111827;">
+    <div class="wrap">
+      <h2 class="section-title" style="text-align:center;margin-bottom:1.5rem;">Our Story</h2>
+      <p>
+        Wild Rydes was started by a former hedge fund analyst and a software developer after a fateful yoga retreat in
+        Nevada.
+        Witnessing majestic unicorns struggling in a world shifting from magic to science, they forged a company to
+        unite
+        humanity’s need for fast transport with underemployed mythical labor. Today, thousands of unicorns fulfill
+        hundreds
+        of rydes every day.
+      </p>
+    </div>
+  </section>
+
+  <!-- SIGN UP -->
+  <section>
+    <div class="wrap" style="text-align:center;">
+      <img src="images/wr-home-W.png" alt="Wild Rydes logo" style="max-width:120px;margin:0 auto 1rem;display:block;">
+      <h2 class="section-title">Sign Up for the Private Beta</h2>
+      <p class="content" style="color:var(--muted);">We’re almost ready. Drop your email and we’ll ping you.</p>
+
+      <form class="newsletter" onsubmit="return false;">
+        <input type="email" placeholder="you@example.com" aria-label="Email address" required>
+        <button type="button">Submit</button>
+      </form>
+
+      <div class="apps" style="margin:2rem 0;">
+        <a class="app-icon" href="#"><img src="images/wr-home-apple.png" alt="App Store"></a>
+        <a class="app-icon" href="#"><img src="images/wr-home-google.png" alt="Google Play"></a>
+        <a class="app-icon" href="#"><img src="images/wr-home-blackberry.png" alt="BlackBerry"></a>
+        <a class="app-icon" href="#"><img src="images/wr-home-Xiaomi.png" alt="Xiaomi"></a>
+      </div>
+
+      <div class="social">
+        <a class="icon-fb" href="#">Facebook</a>
+        <a class="icon-tw" href="#">Twitter</a>
+        <a class="icon-ig" href="#">Instagram</a>
+        <a class="icon-wc" href="#">Wechat</a>
+        <a class="icon-wb" href="#">Weibo</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div class="wrap">
+      <nav aria-label="Footer">
+        <ul>
+          <li><a href="unicorns.html">Unicorns</a></li>
+          <li><a href="investors.html">Investors</a></li>
+          <li><a href="faq.html">FAQ</a></li>
+          <li><a href="apply.html">Apply</a></li>
+        </ul>
+      </nav>
+      <div style="margin-top:1.5rem;">&copy; WildRydes Inc — All Rights Reserved</div>
     </div>
   </footer>
 
-  <script src="js/vendor.js"></script>
+  <!-- Vendor scripts -->
+  <script type src="js/vendor/modernizr.js" defer></script>
 
-  <script src="js/main.js"></script>
+  <!-- If you need Google Maps -->
+  <div id="map" style="width: 100%; height: 400px;"></div>
+  
+  
+     <!-- Load your API key -->
+  <!-- Load the API key -->
+  <script src="js/ev.js"></script>
+  
+  <!-- Load the map logic -->
+  <script src="js/map.js"></script>
+  
+  <!-- Your page content -->
+  <div id="map" style="width: 100%; height: 400px;"></div>
+
+
+  <!-- Your app code -->
+  <script type="module" src="js/main.js"></script>
 </body>
+
 </html>
