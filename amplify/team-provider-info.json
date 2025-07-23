@@ -16,7 +16,7 @@
       "function": {
         "wildrydessite74115767": {
           "deploymentBucketName": "amplify-wildrydessite-dev-282f4-deployment",
-          "s3Key": "amplify-builds/wildrydessite74115767-75545057437069584549-build.zip"
+          "s3Key": "amplify-builds/wildrydessite74115767-623539526c5659394a47-build.zip"
         }
       },
       "auth": {
