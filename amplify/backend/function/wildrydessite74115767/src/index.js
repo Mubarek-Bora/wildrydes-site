@@ -1,175 +1,425 @@
-const { randomBytes } = require("crypto");
+
+"use strict";
+
+"use strict";
+
+const { randomUUID, randomBytes } = require("crypto");
 const { DynamoDBClient } = require("@aws-sdk/client-dynamodb");
 const {
   DynamoDBDocumentClient,
   PutCommand,
   UpdateCommand,
+  GetCommand,
 } = require("@aws-sdk/lib-dynamodb");
 
-// Initialize DynamoDB client
-const client = new DynamoDBClient({});
-const ddb = DynamoDBDocumentClient.from(client);
+// ---------- Configuration ----------
+const TABLE =
+  process.env.RIDES_TABLE || process.env.STORAGE_RIDES_NAME || "Rides";
 
-// Fleet of available drivers
-const fleet = [
-  { Name: "John Mendez", Vehicle: "Toyota Prius", Gender: "Male" },
-  { Name: "Sarah Lee", Vehicle: "Honda Civic", Gender: "Female" },
-  { Name: "Dave Kim", Vehicle: "Tesla Model 3", Gender: "Male" },
+const TTL_DAYS = 90;
+
+const FLEET = [
+  { name: "John Mendez", vehicle: "Toyota Prius", gender: "Male", rating: 4.8 },
+  { name: "Sarah Lee", vehicle: "Honda Civic", gender: "Female", rating: 4.9 },
+  { name: "Dave Kim", vehicle: "Tesla Model 3", gender: "Male", rating: 4.7 },
 ];
 
-// Lambda handler
-exports.handler = async (event, context) => {
-  const processingStartTime = new Date().toISOString();
+// ---------- AWS SDK Setup ----------
+const ddbClient = new DynamoDBClient({
+  region: process.env.AWS_REGION || "us-east-1",
+  maxAttempts: 3,
+});
+const ddb = DynamoDBDocumentClient.from(ddbClient, {
+  marshallOptions: {
+    convertEmptyValues: false,
+    removeUndefinedValues: true,
+    convertClassInstanceToMap: false,
+  },
+  unmarshallOptions: {
+    wrapNumbers: false,
+  },
+});
 
-  if (!event.requestContext?.authorizer) {
-    return errorResponse("Authorization not configured", context.awsRequestId);
+// ---------- Lambda Handler ----------
+exports.handler = async (event, context) => {
+  const startedAt = new Date().toISOString();
+  log("Incoming event", {
+    httpMethod: event.httpMethod,
+    path: event.path,
+    headers: event.headers,
+  });
+
+  // Handle CORS preflight requests
+  if (event.httpMethod === "OPTIONS") {
+    return corsResponse(200, { message: "OK" });
   }
 
-  const rideId = generateRideId();
-  console.log(`Received event (${rideId}):`, JSON.stringify(event));
-
-  const username = event.requestContext.authorizer.claims["cognito:username"];
-  const requestBody = JSON.parse(event.body);
-  const pickupLocation = requestBody.PickupLocation;
-
-  const driver = assignDriver(pickupLocation);
-
   try {
-    await saveRide(rideId, username, driver, processingStartTime);
+    // Extract username with better fallback logic
+    const username = extractUsername(event);
+    log("Processing request for user", { username });
 
-    return {
-      statusCode: 201,
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-      },
-      body: JSON.stringify({
-        RideId: rideId,
-        Driver: driver,
-        Eta: "3 mins",
-        Rider: username,
-        RequestedAt: processingStartTime,
-        Status: "REQUESTED",
-      }),
+    // Parse and validate request body
+    const body = parseRequestBody(event.body);
+    if (!body) {
+      return errorResponse(
+        400,
+        "Request body is required",
+        context.awsRequestId
+      );
+    }
+
+    // Validate pickup location
+    const pickup = validatePickupLocation(body.PickupLocation);
+    if (!pickup.isValid) {
+      return errorResponse(400, pickup.error, context.awsRequestId);
+    }
+
+    // Generate ride ID and assign driver
+    const rideId = genRideId();
+    const driver = pickDriver(pickup.location);
+
+    // Save ride to DynamoDB
+    const rideData = {
+      rideId,
+      username,
+      driver,
+      pickup: pickup.location,
+      requestTime: startedAt,
+      lambdaRequestId: context.awsRequestId,
     };
+
+    await saveRide(rideData);
+
+    // Return successful response
+    const response = {
+      RideId: rideId,
+      Driver: driver,
+      Eta: calculateEta(pickup.location),
+      Rider: username,
+      RequestedAt: startedAt,
+      Status: "REQUESTED",
+      PickupLocation: pickup.location,
+    };
+
+    log("Ride request created successfully", { rideId, username });
+    return corsResponse(201, response);
   } catch (err) {
-    console.error("Failed to record ride:", err);
-    return errorResponse(err.message, context.awsRequestId);
+    log("Error processing ride request", err, "error");
+
+    // Handle specific DynamoDB errors
+    if (err.name === "ConditionalCheckFailedException") {
+      return errorResponse(409, "Duplicate ride request", context.awsRequestId);
+    }
+    if (err.name === "ProvisionedThroughputExceededException") {
+      return errorResponse(
+        429,
+        "Service temporarily unavailable",
+        context.awsRequestId
+      );
+    }
+    if (err.name === "ResourceNotFoundException") {
+      return errorResponse(
+        500,
+        "Database configuration error",
+        context.awsRequestId
+      );
+    }
+
+    return errorResponse(
+      500,
+      "Failed to process ride request",
+      context.awsRequestId
+    );
   }
 };
 
-// Assigns a random driver from the fleet
-function assignDriver(pickupLocation) {
-  console.log(
-    "Assigning driver near:",
-    pickupLocation.Latitude,
-    pickupLocation.Longitude
+// ---------- Core Functions ----------
+function extractUsername(event) {
+  return (
+    event.requestContext?.authorizer?.claims?.["cognito:username"] ||
+    event.requestContext?.identity?.cognitoIdentityId ||
+    event.requestContext?.identity?.userArn?.split("/").pop() ||
+    `guest-${Date.now()}`
   );
-  return fleet[Math.floor(Math.random() * fleet.length)];
 }
 
-// Saves ride details to DynamoDB
-async function saveRide(rideId, username, driver, requestTime) {
+function parseRequestBody(bodyString) {
+  if (!bodyString) return null;
+
+  try {
+    return typeof bodyString === "string" ? JSON.parse(bodyString) : bodyString;
+  } catch (err) {
+    log(
+      "Failed to parse request body",
+      { bodyString, error: err.message },
+      "error"
+    );
+    return null;
+  }
+}
+
+function validatePickupLocation(pickupLocation) {
+  if (!pickupLocation) {
+    return { isValid: false, error: "PickupLocation is required" };
+  }
+
+  const { Latitude, Longitude, Address } = pickupLocation;
+
+  if (typeof Latitude !== "number" || typeof Longitude !== "number") {
+    return {
+      isValid: false,
+      error: "PickupLocation must include valid Latitude and Longitude numbers",
+    };
+  }
+
+  if (Latitude < -90 || Latitude > 90) {
+    return { isValid: false, error: "Latitude must be between -90 and 90" };
+  }
+
+  if (Longitude < -180 || Longitude > 180) {
+    return { isValid: false, error: "Longitude must be between -180 and 180" };
+  }
+
+  return {
+    isValid: true,
+    location: {
+      Latitude,
+      Longitude,
+      Address: Address || `${Latitude}, ${Longitude}`,
+    },
+  };
+}
+
+function pickDriver(location) {
+  log("Assigning driver for location", location);
+
+  // Simple random assignment - in production, you'd use actual location-based logic
+  const availableDrivers = FLEET.filter((driver) => driver.rating >= 4.5);
+  const selectedDriver =
+    availableDrivers[Math.floor(Math.random() * availableDrivers.length)];
+
+  return {
+    ...selectedDriver,
+    DriverId: `driver-${selectedDriver.name
+      .replace(/\s+/g, "-")
+      .toLowerCase()}`,
+    EstimatedArrival: new Date(Date.now() + 3 * 60 * 1000).toISOString(), // 3 minutes from now
+  };
+}
+
+function calculateEta(location) {
+  // Simple ETA calculation - in production, use actual distance/traffic APIs
+  const baseEta = 3 + Math.floor(Math.random() * 5); // 3-7 minutes
+  return `${baseEta} mins`;
+}
+
+async function saveRide({
+  rideId,
+  username,
+  driver,
+  pickup,
+  requestTime,
+  lambdaRequestId,
+}) {
   const now = new Date().toISOString();
-  const ttlTimestamp = Math.floor(Date.now() / 1000) + 90 * 24 * 60 * 60; // 90 days TTL
+  const ttl = Math.floor(Date.now() / 1000) + TTL_DAYS * 24 * 60 * 60;
+
+  const item = {
+    RideId: rideId,
+    User: username,
+    Driver: driver,
+    PickupLocation: pickup,
+    RequestTime: requestTime,
+    ProcessedTime: now,
+    CreatedAt: now,
+    UpdatedAt: now,
+    Status: "REQUESTED",
+    Version: 1,
+    ExpiresAt: ttl,
+    LambdaRequestId: lambdaRequestId,
+    Region: process.env.AWS_REGION || "unknown",
+  };
 
   const params = {
-    TableName: "Rides",
-    Item: {
-      RideId: rideId,
-      User: username,
-      Driver: driver,
-      RequestTime: requestTime,
-      ProcessedTime: now,
-      CreatedAt: now,
-      UpdatedAt: now,
-      Status: "REQUESTED",
-      Version: 1,
-      ExpiresAt: ttlTimestamp,
-      LambdaRequestId: process.env.AWS_REQUEST_ID || "unknown",
-      Region: process.env.AWS_REGION || "unknown",
-    },
+    TableName: TABLE,
+    Item: item,
+    // Add condition to prevent duplicate rides
+    ConditionExpression: "attribute_not_exists(RideId)",
   };
 
-  console.log(`Saving ride ${rideId} to DynamoDB at ${now}`);
-  await ddb.send(new PutCommand(params));
+  log("Saving ride to DynamoDB", {
+    rideId,
+    params: JSON.stringify(params, null, 2),
+  });
+
+  const result = await ddb.send(new PutCommand(params));
+  log("Ride saved successfully", { rideId });
+
+  return result;
 }
 
-// Generates a base64-safe string from random bytes
-function generateRideId() {
-  return randomBytes(16)
-    .toString("base64")
-    .replace(/\+/g, "-")
-    .replace(/\//g, "_")
-    .replace(/=/g, "");
-}
+// ---------- Update Ride Status Function ----------
+exports.updateRideStatus = async (rideId, newStatus, extra = {}) => {
+  if (!rideId || !newStatus) {
+    throw new Error("RideId and newStatus are required");
+  }
 
-// Returns a standardized error response
-function errorResponse(message, requestId) {
-  return {
-    statusCode: 500,
-    headers: {
-      "Access-Control-Allow-Origin": "*",
-    },
-    body: JSON.stringify({
-      Error: message,
-      Reference: requestId,
-      Timestamp: new Date().toISOString(),
-    }),
-  };
-}
+  const validStatuses = [
+    "REQUESTED",
+    "ASSIGNED",
+    "PICKED_UP",
+    "COMPLETED",
+    "CANCELLED",
+  ];
+  if (!validStatuses.includes(newStatus)) {
+    throw new Error(
+      `Invalid status: ${newStatus}. Valid statuses: ${validStatuses.join(
+        ", "
+      )}`
+    );
+  }
 
-// Optional: Helper function for updating ride status
-exports.updateRideStatus = async function (
-  rideId,
-  newStatus,
-  additionalData = {}
-) {
   const now = new Date().toISOString();
 
-  let updateExpression =
+  let UpdateExpression =
     "SET #status = :status, UpdatedAt = :updatedAt, Version = Version + :inc";
-  const expressionAttributeNames = { "#status": "Status" };
-  const expressionAttributeValues = {
+  const ExpressionAttributeNames = { "#status": "Status" };
+  const ExpressionAttributeValues = {
     ":status": newStatus,
     ":updatedAt": now,
     ":inc": 1,
   };
 
-  if (newStatus === "COMPLETED") {
-    updateExpression += ", CompletedTime = :completedTime";
-    expressionAttributeValues[":completedTime"] = now;
-  }
+  // Add status-specific fields
+  switch (newStatus) {
+    case "COMPLETED":
+      UpdateExpression += ", CompletedTime = :completedTime";
+      ExpressionAttributeValues[":completedTime"] = now;
+      break;
 
-  if (newStatus === "CANCELLED") {
-    updateExpression += ", CancelledTime = :cancelledTime";
-    expressionAttributeValues[":cancelledTime"] = now;
-    if (additionalData.reason) {
-      updateExpression += ", CancellationReason = :reason";
-      expressionAttributeValues[":reason"] = additionalData.reason;
-    }
-  }
+    case "CANCELLED":
+      UpdateExpression += ", CancelledTime = :cancelledTime";
+      ExpressionAttributeValues[":cancelledTime"] = now;
+      if (extra.reason) {
+        UpdateExpression += ", CancellationReason = :reason";
+        ExpressionAttributeValues[":reason"] = extra.reason;
+      }
+      break;
 
-  if (newStatus === "ASSIGNED" && additionalData.assignedAt) {
-    updateExpression += ", AssignedTime = :assignedTime";
-    expressionAttributeValues[":assignedTime"] =
-      additionalData.assignedAt || now;
+    case "ASSIGNED":
+      const assignedAt = extra.assignedAt || now;
+      UpdateExpression += ", AssignedTime = :assignedTime";
+      ExpressionAttributeValues[":assignedTime"] = assignedAt;
+      if (extra.driverId) {
+        UpdateExpression += ", AssignedDriverId = :driverId";
+        ExpressionAttributeValues[":driverId"] = extra.driverId;
+      }
+      break;
+
+    case "PICKED_UP":
+      UpdateExpression += ", PickedUpTime = :pickedUpTime";
+      ExpressionAttributeValues[":pickedUpTime"] = now;
+      break;
   }
 
   const params = {
-    TableName: "Rides",
+    TableName: TABLE,
     Key: { RideId: rideId },
-    UpdateExpression: updateExpression,
-    ExpressionAttributeNames: expressionAttributeNames,
-    ExpressionAttributeValues: expressionAttributeValues,
+    UpdateExpression,
+    ExpressionAttributeNames,
+    ExpressionAttributeValues,
+    ConditionExpression: "attribute_exists(RideId)", // Ensure ride exists
     ReturnValues: "ALL_NEW",
   };
 
+  log("Updating ride status", {
+    rideId,
+    newStatus,
+    params: JSON.stringify(params, null, 2),
+  });
+
   try {
     const result = await ddb.send(new UpdateCommand(params));
-    console.log(`Updated ride ${rideId} to status ${newStatus} at ${now}`);
+    log(`Successfully updated ride ${rideId} to status ${newStatus}`);
     return result.Attributes;
-  } catch (error) {
-    console.error(`Failed to update ride ${rideId}:`, error);
-    throw error;
+  } catch (err) {
+    if (err.name === "ConditionalCheckFailedException") {
+      log(`Ride ${rideId} not found`, err, "error");
+      throw new Error(`Ride ${rideId} not found`);
+    }
+    log(`Failed to update ride ${rideId}`, err, "error");
+    throw err;
   }
 };
+
+// ---------- Get Ride Function ----------
+exports.getRide = async (rideId) => {
+  if (!rideId) {
+    throw new Error("RideId is required");
+  }
+
+  const params = {
+    TableName: TABLE,
+    Key: { RideId: rideId },
+  };
+
+  try {
+    const result = await ddb.send(new GetCommand(params));
+    if (!result.Item) {
+      throw new Error(`Ride ${rideId} not found`);
+    }
+    return result.Item;
+  } catch (err) {
+    log(`Failed to get ride ${rideId}`, err, "error");
+    throw err;
+  }
+};
+
+// ---------- Utility Functions ----------
+function genRideId() {
+  const uuid =
+    typeof randomUUID === "function"
+      ? randomUUID().replace(/-/g, "")
+      : randomBytes(16).toString("hex");
+
+  // Add timestamp prefix for better DynamoDB distribution
+  const timestamp = Date.now().toString(36);
+  return `${timestamp}-${uuid}`;
+}
+
+function corsResponse(statusCode, body) {
+  return {
+    statusCode,
+    headers: {
+      "Access-Control-Allow-Origin": "*",
+      "Access-Control-Allow-Headers":
+        "Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token",
+      "Access-Control-Allow-Methods": "GET,HEAD,OPTIONS,POST,PUT,DELETE",
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(body),
+  };
+}
+
+function errorResponse(statusCode, message, reqId) {
+  const errorBody = {
+    Error: message,
+    Reference: reqId,
+    Timestamp: new Date().toISOString(),
+  };
+
+  log("Returning error response", { statusCode, message, reqId }, "error");
+  return corsResponse(statusCode, errorBody);
+}
+
+function log(message, obj = {}, level = "info") {
+  const logEntry = {
+    timestamp: new Date().toISOString(),
+    level: level.toUpperCase(),
+    message,
+    ...(obj && typeof obj === "object" ? obj : { data: obj }),
+  };
+
+  console[level](JSON.stringify(logEntry));
+}

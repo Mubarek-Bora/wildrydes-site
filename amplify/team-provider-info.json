@@ -16,7 +16,7 @@
       "function": {
         "wildrydessite74115767": {
           "deploymentBucketName": "amplify-wildrydessite-dev-282f4-deployment",
-          "s3Key": "amplify-builds/wildrydessite74115767-623539526c5659394a47-build.zip"
+          "s3Key": "amplify-builds/wildrydessite74115767-4c474547793047747965-build.zip"
         }
       },
       "auth": {
@@ -24,6 +24,16 @@
       },
       "api": {
         "rideapi123": {}
+      },
+      "storage": {
+        "Rides": {
+          "tableName": "Rides",
+          "region": "us-west-2",
+          "arn": "arn:aws:dynamodb:us-west-2:825773630840:table/Rides",
+          "partitionKeyName": "RideId",
+          "partitionKeyType": "S",
+          "streamArn": "arn:aws:dynamodb:us-west-2:825773630840:table/Rides/stream/2025-07-23T13:31:55.990"
+        }
       }
     }
   }

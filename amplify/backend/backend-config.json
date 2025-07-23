@@ -65,6 +65,54 @@
           "resourceName": "wildrydessite74115767"
         }
       ]
+    },
+    "AMPLIFY_storage_Rides_arn": {
+      "usedBy": [
+        {
+          "category": "storage",
+          "resourceName": "Rides"
+        }
+      ]
+    },
+    "AMPLIFY_storage_Rides_partitionKeyName": {
+      "usedBy": [
+        {
+          "category": "storage",
+          "resourceName": "Rides"
+        }
+      ]
+    },
+    "AMPLIFY_storage_Rides_partitionKeyType": {
+      "usedBy": [
+        {
+          "category": "storage",
+          "resourceName": "Rides"
+        }
+      ]
+    },
+    "AMPLIFY_storage_Rides_region": {
+      "usedBy": [
+        {
+          "category": "storage",
+          "resourceName": "Rides"
+        }
+      ]
+    },
+    "AMPLIFY_storage_Rides_streamArn": {
+      "usedBy": [
+        {
+          "category": "storage",
+          "resourceName": "Rides"
+        }
+      ]
+    },
+    "AMPLIFY_storage_Rides_tableName": {
+      "usedBy": [
+        {
+          "category": "storage",
+          "resourceName": "Rides"
+        }
+      ]
     }
   }
 }

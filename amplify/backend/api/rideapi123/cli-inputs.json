@@ -5,11 +5,7 @@
       "name": "/ride",
       "lambdaFunction": "wildrydessite74115767",
       "permissions": {
-        "setting": "private",
-        "auth": [
-          "create",
-          "read"
-        ]
+        "setting": "open"
       }
     }
   }
