@@ -19,4 +19,5 @@ amplifytools.xcconfig
 .secret-*
 **.sample
  env.js
-#amplify-do-not-edit-end
+#amplify-do-not-edit-endnode_modules/
+.env
