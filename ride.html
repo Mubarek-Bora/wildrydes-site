@@ -8,22 +8,6 @@
   <link rel="stylesheet" href="style.css" />
   <script src="env.js"></script>
   <script src="https://unpkg.com/aws-amplify@5.0.4/dist/aws-amplify.min.js"></script>
-  <script src="aws-exports.js"></script>
-  <script>
-    function loadGoogleMaps() {
-      const apiKey = window.ENV?.GOOGLE_MAPS_KEY;
-      if (!apiKey) {
-        console.error("❌ Google Maps API key not found in env.js");
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
-      script.async = true;
-      script.defer = true;
-      document.head.appendChild(script);
-    }
-    window.onload = loadGoogleMaps;
-  </script>
 </head>
 
 <body
@@ -32,7 +16,9 @@
     style="background: #fff; border-radius: 20px; box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1); padding: 30px; width: 100%; max-width: 800px; min-height: 600px;">
     <h1
       style="text-align: center; color: #333; margin-bottom: 30px; font-size: 2.5em; background: linear-gradient(45deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">
-      🚗 Wild Rydes</h1>
+      🚗 Wild Rydes
+    </h1>
+
     <form id="rideRequest"
       style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px; align-items: center;">
       <input id="pickup" placeholder="📍 Pickup Location" autocomplete="off"
@@ -40,8 +26,9 @@
       <input id="dropoff" placeholder="🎯 Dropoff Location" autocomplete="off"
         style="padding: 15px 20px; border: 2px solid #e1e5e9; border-radius: 10px; font-size: 16px; background: #fff;" />
       <button type="submit"
-        style="grid-column: 1/-1; padding: 15px 30px; background: linear-gradient(45deg, #667eea, #764ba2); color: #fff; border: none; border-radius: 10px; font-size: 18px; font-weight: 600; cursor: pointer;">🚀
-        Book My Ride</button>
+        style="grid-column: 1/-1; padding: 15px 30px; background: linear-gradient(45deg, #667eea, #764ba2); color: #fff; border: none; border-radius: 10px; font-size: 18px; font-weight: 600; cursor: pointer;">
+        🚀 Book My Ride
+      </button>
     </form>
 
     <div id="rideInfo" class="ride-info"
@@ -59,8 +46,248 @@
     <div id="status"></div>
   </div>
 
-  <script src="js/map.js"></script>
-  <script type="module" src="ride.js"></script>
+  <!-- Dynamic Google Maps Script Loading -->
+  <script>
+    function loadGoogleMaps() {
+      let apiKey = null;
+      if (window.ENV && window.ENV.GOOGLE_MAPS_KEY) {
+        apiKey = window.ENV.GOOGLE_MAPS_KEY;
+      } else if (typeof GOOGLE_MAPS_API_KEY !== 'undefined') {
+        apiKey = GOOGLE_MAPS_API_KEY;
+      } else if (typeof window.GOOGLE_MAPS_API_KEY !== 'undefined') {
+        apiKey = window.GOOGLE_MAPS_API_KEY;
+      }
+      if (!apiKey) {
+        console.error('Google Maps API key not found. Current ENV:', window.ENV);
+        document.getElementById('status').innerHTML = '<p style="color: red;">⚠️ Google Maps API key not found in window.ENV.GOOGLE_MAPS_KEY</p>';
+        return;
+      }
+      console.log('Loading Google Maps with API key:', apiKey.substring(0, 20) + '...');
+      const script = document.createElement('script');
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places&callback=initMap`;
+      script.async = true;
+      script.defer = true;
+      script.onerror = function () {
+        console.error('Failed to load Google Maps');
+        document.getElementById('status').innerHTML = '<p style="color: red;">❌ Failed to load Google Maps - check API key validity</p>';
+      };
+      document.head.appendChild(script);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', loadGoogleMaps);
+    } else {
+      loadGoogleMaps();
+    }
+  </script>
+
+  <!-- Google Maps Initialization -->
+  <script>
+    let pickupCoords = null;
+    let dropoffCoords = null;
+
+    window.initMap = function () {
+      const seattle = { lat: 47.6062, lng: -122.3321 };
+      const map = new google.maps.Map(document.getElementById("map"), {
+        center: seattle,
+        zoom: 12,
+        styles: [
+          {
+            featureType: "poi",
+            elementType: "labels",
+            stylers: [{ visibility: "off" }]
+          }
+        ]
+      });
+
+      const pickupInput = document.getElementById("pickup");
+      const dropoffInput = document.getElementById("dropoff");
+
+      // Initialize autocomplete (migrate to PlaceAutocompleteElement in future)
+      const pickupAutocomplete = new google.maps.places.Autocomplete(pickupInput, {
+        fields: ['geometry', 'name', 'formatted_address']
+      });
+      const dropoffAutocomplete = new google.maps.places.Autocomplete(dropoffInput, {
+        fields: ['geometry', 'name', 'formatted_address']
+      });
+
+      let pickupMarker = null;
+      let dropoffMarker = null;
+
+      // Pickup location handler
+      pickupAutocomplete.addListener("place_changed", () => {
+        const place = pickupAutocomplete.getPlace();
+        if (!place.geometry || !place.geometry.location) {
+          alert("Please select a valid pickup location from the suggestions.");
+          return;
+        }
+        pickupCoords = place.geometry.location.toJSON();
+        if (pickupMarker) pickupMarker.setMap(null);
+        pickupMarker = new google.maps.Marker({
+          map,
+          position: place.geometry.location,
+          title: "Pickup Location",
+          icon: {
+            url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
+          }
+        });
+        map.panTo(place.geometry.location);
+        console.log('Pickup coordinates:', pickupCoords);
+      });
+
+      // Dropoff location handler
+      dropoffAutocomplete.addListener("place_changed", () => {
+        const place = dropoffAutocomplete.getPlace();
+        if (!place.geometry || !place.geometry.location) {
+          alert("Please select a valid dropoff location from the suggestions.");
+          return;
+        }
+        dropoffCoords = place.geometry.location.toJSON();
+        if (dropoffMarker) dropoffMarker.setMap(null);
+        dropoffMarker = new google.maps.Marker({
+          map,
+          position: place.geometry.location,
+          title: "Dropoff Location",
+          icon: {
+            url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
+          }
+        });
+        // Fit both markers in view
+        if (pickupMarker && dropoffMarker) {
+          const bounds = new google.maps.LatLngBounds();
+          bounds.extend(pickupMarker.getPosition());
+          bounds.extend(dropoffMarker.getPosition());
+          map.fitBounds(bounds);
+        }
+        console.log('Dropoff coordinates:', dropoffCoords);
+      });
+
+      console.log('Google Maps initialized successfully');
+      document.getElementById('status').innerHTML = '<p style="color: green;">Maps loaded successfully! Select pickup and dropoff locations.</p>';
+    };
+  </script>
+
+  <!-- Ride Booking Handler: Now Chained from Amplify Config! -->
+  <script>
+    function initRideFormHandler() {
+      const form = document.getElementById("rideRequest");
+      if (!form) return;
+
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        const pickup = document.getElementById("pickup").value.trim();
+        const dropoff = document.getElementById("dropoff").value.trim();
+
+        // Validation
+        if (!pickup || !dropoff) {
+          alert("Please enter both pickup and dropoff locations.");
+          return;
+        }
+        if (!pickupCoords || !dropoffCoords) {
+          alert("Please select valid locations from the autocomplete suggestions.");
+          return;
+        }
+
+        // Show loading state
+        const submitButton = form.querySelector('button[type="submit"]');
+        const originalText = submitButton.innerHTML;
+        submitButton.innerHTML = '⏳ Booking...';
+        submitButton.disabled = true;
+
+        const requestBody = {
+          PickupLocation: {
+            Latitude: pickupCoords.lat,
+            Longitude: pickupCoords.lng,
+            Address: pickup
+          },
+          DropoffLocation: {
+            Latitude: dropoffCoords.lat,
+            Longitude: dropoffCoords.lng,
+            Address: dropoff
+          }
+        };
+
+        try {
+          if (!window.AmplifyConfigured) {
+            throw new Error('Amplify not configured yet');
+          }
+          const { Auth } = window.AmplifyConfigured;
+          const session = await Auth.currentSession();
+          const token = session.getIdToken().getJwtToken();
+
+          const response = await fetch(
+            "https://fjvnmxo4z9.execute-api.us-west-2.amazonaws.com/dev/ride",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "Authorization": token,
+              },
+              body: JSON.stringify(requestBody),
+            }
+          );
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+          }
+
+          const result = await response.json();
+          console.log('Ride booking result:', result);
+
+          // Update UI with booking confirmation
+          document.getElementById("confirmedPickup").textContent = pickup;
+          document.getElementById("confirmedDropoff").textContent = dropoff;
+          document.getElementById("estimatedTime").textContent = result.Eta || result.Driver?.EstimatedArrival || 'N/A';
+          document.getElementById("driverName").textContent = result.Driver?.name || result.Driver?.Name || 'N/A';
+          document.getElementById("rideInfo").style.display = "block";
+          document.getElementById('status').innerHTML = '<p style="color: green;">✅ Ride booked successfully!</p>';
+
+        } catch (err) {
+          console.error("❌ Error booking ride:", err);
+          alert("Something went wrong while booking the ride. Please try again.");
+          document.getElementById('status').innerHTML = '<p style="color: red;">❌ Failed to book ride. Please try again.</p>';
+        } finally {
+          submitButton.innerHTML = originalText;
+          submitButton.disabled = false;
+        }
+      });
+    }
+  </script>
+
+  <!-- AWS Amplify Config: Chains Ride Handler! -->
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      if (typeof window.aws_amplify === 'undefined') {
+        console.error('AWS Amplify failed to load');
+        document.getElementById('status').innerHTML = '<p style="color: red;">❌ AWS Amplify failed to load</p>';
+        return;
+      }
+      const Amplify = window.aws_amplify.Amplify;
+      const Auth = window.aws_amplify.Auth;
+      const awsconfig = {
+        aws_project_region: "us-west-2",
+        aws_cognito_identity_pool_id: "us-west-2:8c8d895d-e35a-4867-a19e-461ce439ba1a",
+        aws_cognito_region: "us-west-2",
+        aws_user_pools_id: "us-west-2_3fFOs8mOs",
+        aws_user_pools_web_client_id: "18emsfh336qcbc366ija8isgta",
+        oauth: {},
+        aws_cloud_logic_custom: [
+          {
+            name: "rideapi123",
+            endpoint: "https://fjvnmxo4z9.execute-api.us-west-2.amazonaws.com/dev",
+            region: "us-west-2"
+          }
+        ]
+      };
+      Amplify.configure(awsconfig);
+      window.AmplifyConfigured = { Amplify, Auth };
+      console.log('Amplify configured successfully');
+      // Now, and ONLY now, initialize the ride form handler!
+      if (typeof initRideFormHandler === 'function') {
+        initRideFormHandler();
+      }
+    });
+  </script>
 </body>
 
 </html>
